@@ -1,0 +1,17 @@
+{
+  "id": "/barbearia-almeida-app-v2",
+  "name": "Barbearia Almeida",
+  "short_name": "B. Almeida",
+  "description": "Agenda e gestão da Barbearia Almeida",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#080909",
+  "theme_color": "#080909",
+  "orientation": "portrait-primary",
+  "icons": [
+    {"src":"/almeida-viking-192-v2.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"/almeida-viking-512-v2.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"/almeida-viking-maskable-v2.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ]
+}

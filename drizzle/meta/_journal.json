@@ -1,0 +1,76 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1787685829913,
+      "tag": "0000_optimal_shriek",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787689000000,
+      "tag": "0001_seed_barbearia",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787705464263,
+      "tag": "0002_zippy_wind_dancer",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1787785985154,
+      "tag": "0003_boring_gargoyle",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1787842969630,
+      "tag": "0004_worthless_quicksilver",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1787944689756,
+      "tag": "0005_parched_skaar",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1787944755884,
+      "tag": "0006_overrated_boomer",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1787967111671,
+      "tag": "0007_misty_celestials",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1788703572015,
+      "tag": "0008_even_nick_fury",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1788789900000,
+      "tag": "0009_add_barba_service",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+ALTER TABLE `barber_services` ADD `image_key` text;
