@@ -34,28 +34,43 @@ async function accessToken() {
   return result.access_token;
 }
 
-async function sendTokens(tokens: string[], message: PushMessage) {
-  if (!tokens.length) return;
+export type PushResult = { configured: boolean; devices: number; delivered: number; failed: { status: number; detail: string }[] };
+
+async function sendTokens(tokens: string[], message: PushMessage): Promise<PushResult> {
+  const result: PushResult = { configured: true, devices: tokens.length, delivered: 0, failed: [] };
+  if (!tokens.length) return result;
   try {
     const token = await accessToken();
-    if (!token) return;
+    if (!token) {
+      result.configured = false;
+      console.error("push_not_configured: faltam FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL ou FIREBASE_PRIVATE_KEY");
+      return result;
+    }
     const projectId = (env as unknown as Record<string, string>).FIREBASE_PROJECT_ID;
     const db = getDb();
     await Promise.all(tokens.map(async registrationToken => {
       const response = await fetch(`https://fcm.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/messages:send`, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ message: { token: registrationToken, notification: { title: message.title, body: message.body }, data: { url: message.url }, webpush: { fcmOptions: { link: message.url } } } }) });
+      if (response.ok) { result.delivered += 1; return; }
+      const detail = (await response.text().catch(() => "")).slice(0, 200);
+      result.failed.push({ status: response.status, detail });
+      console.error("push_fcm_rejected", response.status, detail);
       if (response.status === 404 || response.status === 410) await db.update(pushSubscriptions).set({ active: false }).where(eq(pushSubscriptions.fcmToken, registrationToken));
     }));
   } catch (error) {
-    console.error("push_delivery_failed", error instanceof Error ? error.message : "unknown");
+    const detail = error instanceof Error ? error.message : "unknown";
+    result.failed.push({ status: 0, detail });
+    console.error("push_delivery_failed", detail);
   }
+  return result;
 }
 
 export async function sendToProfile(profileId: string, message: PushMessage) {
   const rows = await getDb().select({ token: pushSubscriptions.fcmToken }).from(pushSubscriptions).where(and(eq(pushSubscriptions.kind, "staff"), eq(pushSubscriptions.profileId, profileId), eq(pushSubscriptions.active, true)));
-  await sendTokens(rows.map(row => row.token), message);
+  if (!rows.length) console.warn("push_no_devices", profileId);
+  return sendTokens(rows.map(row => row.token), message);
 }
 
 export async function sendToCustomer(appointmentId: string, message: PushMessage) {
   const rows = await getDb().select({ token: pushSubscriptions.fcmToken }).from(pushSubscriptions).where(and(eq(pushSubscriptions.kind, "customer"), eq(pushSubscriptions.appointmentId, appointmentId), eq(pushSubscriptions.active, true)));
-  await sendTokens(rows.map(row => row.token), message);
+  return sendTokens(rows.map(row => row.token), message);
 }

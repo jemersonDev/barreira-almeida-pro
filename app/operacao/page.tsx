@@ -80,6 +80,7 @@ export default function Operation() {
     [notices, setNotices] = useState<Notice[]>([]),
     [noticeOpen, setNoticeOpen] = useState(false),
     [seenAt, setSeenAt] = useState(0),
+    [pushStatus, setPushStatus] = useState(""),
     [notificationPermission, setNotificationPermission] = useState<
       NotificationPermission | "unsupported"
     >("unsupported");
@@ -170,6 +171,27 @@ export default function Operation() {
       setSuccess("Notificações ativadas neste aparelho.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível ativar as notificações.");
+    }
+  };
+  const testNotifications = async () => {
+    setPushStatus("Testando...");
+    try {
+      const token = await requestPushToken();
+      const saved = await fetch("/api/push/staff", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      if (!saved.ok) throw new Error((await saved.json()).error || "Não foi possível registrar este aparelho.");
+      setNotificationPermission("granted");
+      const response = await fetch("/api/push/test", { method: "POST" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Falha ao enviar o teste.");
+      if (!result.configured) throw new Error("O servidor não tem as chaves do Firebase configuradas (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY).");
+      if (result.failed?.length) throw new Error(`O Firebase recusou o envio (código ${result.failed[0].status}): ${result.failed[0].detail}`);
+      setPushStatus(`Teste enviado para ${result.delivered} aparelho(s). Se a notificação não aparecer, confira as configurações de notificação do navegador e do celular.`);
+    } catch (e) {
+      setPushStatus(e instanceof Error ? e.message : "Não foi possível testar as notificações.");
     }
   };
   async function change(
@@ -318,6 +340,19 @@ export default function Operation() {
                     ATIVAR NOTIFICAÇÕES NESTE APARELHO
                   </button>
                 )}
+              {notificationPermission !== "unsupported" ? (
+                <button
+                  onClick={testNotifications}
+                  className="mb-3 w-full rounded-lg border border-[#d6ae42] p-3 text-xs font-black text-[#d6ae42]"
+                >
+                  REGISTRAR E TESTAR NOTIFICAÇÃO
+                </button>
+              ) : (
+                <p className="mb-3 text-xs text-[#d6ae42]">
+                  Este navegador não aceita notificações. No iPhone, instale o app na tela inicial (Compartilhar, depois Adicionar à Tela de Início) e abra por lá.
+                </p>
+              )}
+              {pushStatus && <p className="mb-3 text-xs text-[#ddd]">{pushStatus}</p>}
               <p className="mb-3 text-[10px] text-[#777]">
                 Depois de ativadas, as notificações poderão aparecer mesmo com o painel fechado.
               </p>
