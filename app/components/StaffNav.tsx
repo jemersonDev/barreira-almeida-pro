@@ -1,3 +1,5 @@
+import "./staff-font.css";
+
 type Tab = "inicio" | "agenda" | "novo" | "relatorio" | "config";
 
 const tabs: { id: Tab; href: string; icon: string; label: string }[] = [

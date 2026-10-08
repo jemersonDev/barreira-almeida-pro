@@ -82,6 +82,12 @@ export default function Operation() {
     [noticeOpen, setNoticeOpen] = useState(false),
     [seenAt, setSeenAt] = useState(0),
     [pushStatus, setPushStatus] = useState(""),
+    [week, setWeek] = useState<{
+      today: number;
+      week: number;
+      revenueCents: number;
+      next: { startsAt: string; customerName: string; serviceName: string } | null;
+    } | null>(null),
     [notificationPermission, setNotificationPermission] = useState<
       NotificationPermission | "unsupported"
     >("unsupported");
@@ -105,9 +111,63 @@ export default function Operation() {
       setLoading(false);
     }
   }
+  async function loadWeek() {
+    try {
+      const base = new Date(`${today}T12:00:00`);
+      const monday = new Date(base);
+      monday.setDate(base.getDate() - ((base.getDay() + 6) % 7));
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      const ymd = (d: Date) => d.toLocaleDateString("en-CA");
+      const r = await fetch(
+        `/api/staff/history?from=${ymd(monday)}&to=${ymd(sunday)}`,
+        { cache: "no-store" },
+      );
+      const j = await r.json();
+      if (!r.ok) return;
+      const list: {
+        startsAt: string;
+        status: Status;
+        priceCents: number;
+        customerName: string;
+        serviceName: string;
+      }[] = j.appointments || [];
+      const counted = list.filter(
+        (a) => a.status !== "cancelled" && a.status !== "no_show",
+      );
+      const dayOf = (v: string) =>
+        new Date(v).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+      const nowMs = Date.now();
+      const upcoming =
+        list.find(
+          (a) =>
+            ["pending", "confirmed"].includes(a.status) &&
+            new Date(a.startsAt).getTime() >= nowMs,
+        ) || null;
+      setWeek({
+        today: counted.filter((a) => dayOf(a.startsAt) === today).length,
+        week: counted.length,
+        revenueCents: list
+          .filter((a) => a.status === "completed")
+          .reduce((sum, a) => sum + a.priceCents, 0),
+        next: upcoming
+          ? {
+              startsAt: upcoming.startsAt,
+              customerName: upcoming.customerName,
+              serviceName: upcoming.serviceName,
+            }
+          : null,
+      });
+    } catch {}
+  }
   useEffect(() => {
     load();
   }, [date]);
+  useEffect(() => {
+    loadWeek();
+    const timer = setInterval(loadWeek, 60000);
+    return () => clearInterval(timer);
+  }, []);
   useEffect(() => {
     if (typeof window === "undefined") return;
     setSeenAt(
@@ -224,6 +284,7 @@ export default function Operation() {
       );
       setCompleting(null);
       setCancelling(null);
+      loadWeek();
       if (status === "cancelled")
         setSuccess(
           "Agendamento cancelado com sucesso. O horário já está disponível novamente.",
@@ -286,7 +347,7 @@ export default function Operation() {
           <div className="flex items-center gap-3">
             {profile?.photoUrl ? <img src={profile.photoUrl} alt={`Foto de ${profile.name}`} className="h-12 w-12 rounded-full border-2 border-[#d6ae42] object-cover" /> : <span className="grid h-12 w-12 place-items-center rounded-full border border-[#d6ae42] font-black text-[#d6ae42]">{profile?.name?.slice(0,2).toUpperCase() || "BA"}</span>}
             <div>
-            <a href="/" className="text-xl font-black tracking-[.16em]">
+            <a href="/" className="font-bebas text-3xl tracking-[.12em]">
               <span className="text-[#d6ae42]">B.</span> ALMEIDA
             </a>
             <p className="mt-2 text-xs text-[#777]">
@@ -397,26 +458,26 @@ export default function Operation() {
             </section>
           )}
         </header>
-        <div className="mb-6">
-          <p className="text-[10px] font-bold tracking-[.2em] text-[#d6ae42]">
-            AGENDA REAL
-          </p>
-          <h1 className="mt-1 text-3xl font-black">Atendimentos do dia</h1>
-          <p className="mt-2 text-sm text-[#777]">
-            {profile?.role === "barber"
-              ? "Você vê e altera somente seus atendimentos."
-              : "Controle completo da agenda da equipe."}
-          </p>
-          <div className="mt-4 grid grid-cols-2 gap-2">
+        <section className="mb-5 overflow-hidden rounded-xl border border-[#2a2d2a] bg-gradient-to-br from-[#1a1b19] via-[#111211] to-[#2a2210] p-5">
+          <span className="inline-block border border-[#d6ae42] px-3 py-1.5 text-[11px] font-bold tracking-[.3em] text-[#d6ae42]">
+            ✦ UBERABA · MG
+          </span>
+          <h1 className="font-bebas mt-4 text-6xl leading-[.95]">
+            <span className="block">PARA SEU</span>
+            <span className="block text-[#d6ae42]">MELHOR</span>
+            <span className="block">ESTILO</span>
+          </h1>
+          <p className="mt-3 text-sm italic text-[#777]">em alto padrão.</p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
             <a
               href="/novo-agendamento"
-              className="rounded-lg bg-[#d6ae42] p-4 text-center text-xs font-black tracking-wider text-black"
+              className="rounded-lg bg-[#d6ae42] p-4 text-center text-xs font-black tracking-[.2em] text-black"
             >
               AGENDAR
             </a>
             <a
               href="/clientes"
-              className="rounded-lg border border-[#d6ae42] p-4 text-center text-xs font-black tracking-wider text-[#d6ae42]"
+              className="rounded-lg border border-[#d6ae42] p-4 text-center text-xs font-black tracking-[.2em] text-[#d6ae42]"
             >
               CLIENTES
             </a>
@@ -427,7 +488,70 @@ export default function Operation() {
               ALMOÇO, PAUSA OU FOLGA
             </a>
           </div>
+        </section>
+        <section className="mb-5 grid grid-cols-3 divide-x divide-[#2a2d2a] overflow-hidden rounded-xl border border-[#2a2d2a] bg-[#151716]">
+          {[
+            ["HOJE", week ? String(week.today) : "–"],
+            ["SEMANA", week ? String(week.week) : "–"],
+            ["FATURAMENTO", week ? money(week.revenueCents) : "–"],
+          ].map(([label, value]) => (
+            <div key={label} className="px-2 py-4 text-center">
+              <b className={`font-bebas block whitespace-nowrap text-[#d6ae42] ${label === "FATURAMENTO" ? "text-2xl" : "text-3xl"}`}>
+                {value}
+              </b>
+              <small className="text-[10px] tracking-[.2em] text-[#8d918d]">
+                {label}
+              </small>
+            </div>
+          ))}
+        </section>
+        <div aria-hidden className="mb-5 flex items-center gap-3">
+          <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[#d6ae42]/60" />
+          <span className="text-xs text-[#d6ae42]">◆</span>
+          <span className="h-px flex-1 bg-gradient-to-l from-transparent to-[#d6ae42]/60" />
         </div>
+        <section className="mb-6">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-bebas text-3xl tracking-wider">PRÓXIMO HORÁRIO</h2>
+            <a href="/agendamentos" className="whitespace-nowrap text-sm text-[#d6ae42]">
+              Ver todos →
+            </a>
+          </div>
+          {week?.next ? (
+            <article className="rounded-xl border border-[#5e502a] bg-[#17150f] p-4">
+              <div className="flex items-center gap-4">
+                <b className="font-bebas text-5xl text-[#d6ae42]">
+                  {new Date(week.next.startsAt).toLocaleTimeString("pt-BR", {
+                    timeZone: "America/Sao_Paulo",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </b>
+                <div>
+                  <b className="block">{week.next.customerName}</b>
+                  <span className="text-sm text-[#8d918d]">
+                    {week.next.serviceName} ·{" "}
+                    {new Date(week.next.startsAt).toLocaleDateString("pt-BR", {
+                      timeZone: "America/Sao_Paulo",
+                      weekday: "short",
+                      day: "2-digit",
+                      month: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </div>
+            </article>
+          ) : (
+            <div className="py-6 text-center text-[#777]">
+              <div className="text-5xl">📅</div>
+              <p className="mt-3 text-sm">
+                {week
+                  ? "Nenhum agendamento próximo hoje"
+                  : "Carregando próximo horário..."}
+              </p>
+            </div>
+          )}
+        </section>
         {error && (
           <p className="mb-4 rounded-lg border border-red-900 bg-red-950/30 p-4 text-sm text-red-300">
             {error}
@@ -441,6 +565,14 @@ export default function Operation() {
             ✓ {success}
           </p>
         )}
+        <div className="mb-3">
+          <h2 className="font-bebas text-3xl tracking-wider">ATENDIMENTOS DO DIA</h2>
+          <p className="mt-1 text-sm text-[#777]">
+            {profile?.role === "barber"
+              ? "Você vê e altera somente seus atendimentos."
+              : "Controle completo da agenda da equipe."}
+          </p>
+        </div>
         <div className={`mb-5 grid gap-2 ${profile?.role === "barber" ? "grid-cols-3" : "grid-cols-2"}`}>
           <Card
             label="Concluídos"
