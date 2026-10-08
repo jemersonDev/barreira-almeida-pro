@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { requestPushToken } from "../../lib/firebase-client";
+import StaffNav from "../components/StaffNav";
 type Role = "owner" | "barber";
 type Status = "pending" | "confirmed" | "completed" | "cancelled" | "no_show";
 type Item = {
@@ -279,7 +280,7 @@ export default function Operation() {
       </main>
     );
   return (
-    <main className="min-h-screen bg-[#080909] p-4 text-[#f4f1e8] sm:p-8">
+    <main className="min-h-screen bg-[#080909] p-4 pb-32 text-[#f4f1e8] sm:p-8 sm:pb-32">
       <div className="mx-auto max-w-5xl">
         <header className="relative mb-7 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -406,29 +407,26 @@ export default function Operation() {
               ? "Você vê e altera somente seus atendimentos."
               : "Controle completo da agenda da equipe."}
           </p>
-          <nav className="mt-4 grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="mt-4 grid grid-cols-2 gap-2">
             <a
               href="/novo-agendamento"
-              className="rounded-lg bg-[#d6ae42] p-4 text-center text-xs font-black text-black"
+              className="rounded-lg bg-[#d6ae42] p-4 text-center text-xs font-black tracking-wider text-black"
             >
-              + NOVO AGENDAMENTO
+              AGENDAR
+            </a>
+            <a
+              href="/clientes"
+              className="rounded-lg border border-[#d6ae42] p-4 text-center text-xs font-black tracking-wider text-[#d6ae42]"
+            >
+              CLIENTES
             </a>
             <a
               href="/horarios"
-              className="rounded-lg border border-[#6d5b2c] p-4 text-center text-xs font-black text-[#d6ae42]"
+              className="col-span-2 rounded-lg border border-[#6d5b2c] p-3 text-center text-[11px] font-black text-[#d6ae42]"
             >
               ALMOÇO, PAUSA OU FOLGA
             </a>
-            <a
-              href="/relatorios"
-              className="rounded-lg border border-[#6d5b2c] p-4 text-center text-xs font-black text-[#d6ae42]"
-            >
-              RELATÓRIOS
-            </a>
-            <a href="/configuracoes" className="rounded-lg border border-[#6d5b2c] p-4 text-center text-xs font-black text-[#d6ae42]">MEUS PREÇOS</a>
-            <a href="/agendamentos" className="rounded-lg border border-[#6d5b2c] p-4 text-center text-xs font-black text-[#d6ae42]">MEUS AGENDAMENTOS</a>
-            <a href="/clientes" className="rounded-lg border border-[#6d5b2c] p-4 text-center text-xs font-black text-[#d6ae42]">MEUS CLIENTES</a>
-          </nav>
+          </div>
         </div>
         {error && (
           <p className="mb-4 rounded-lg border border-red-900 bg-red-950/30 p-4 text-sm text-red-300">
@@ -443,7 +441,7 @@ export default function Operation() {
             ✓ {success}
           </p>
         )}
-        <div className={`mb-5 grid gap-3 ${profile?.role === "barber" ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+        <div className={`mb-5 grid gap-2 ${profile?.role === "barber" ? "grid-cols-3" : "grid-cols-2"}`}>
           <Card
             label="Concluídos"
             value={String(completed.length)}
@@ -654,6 +652,7 @@ export default function Operation() {
           </div>
         )}
       </div>
+      <StaffNav active="inicio" />
     </main>
   );
 }
@@ -667,12 +666,12 @@ function Card({
   note: string;
 }) {
   return (
-    <article className="rounded-xl border border-[#2a2d2a] bg-[#151716] p-5">
-      <small className="text-[9px] font-bold tracking-wider text-[#888]">
+    <article className="rounded-xl border border-[#2a2d2a] bg-[#151716] p-3 text-center">
+      <small className="block text-[9px] font-bold tracking-wider text-[#888]">
         {label.toUpperCase()}
       </small>
-      <b className="my-3 block text-2xl text-[#d6ae42]">{value}</b>
-      <span className="text-xs text-[#777]">{note}</span>
+      <b className="my-1.5 block text-xl text-[#d6ae42]">{value}</b>
+      <span className="block text-[10px] leading-tight text-[#777]">{note}</span>
     </article>
   );
 }

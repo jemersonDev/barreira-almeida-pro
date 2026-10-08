@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import StaffNav from "../components/StaffNav";
 type Service = {
   id: string;
   name: string;
@@ -129,7 +130,7 @@ export default function Settings() {
       </main>
     );
   return (
-    <main className="min-h-screen bg-[#080909] p-4 text-[#f4f1e8] sm:p-8">
+    <main className="min-h-screen bg-[#080909] p-4 pb-32 text-[#f4f1e8] sm:p-8 sm:pb-32">
       <div className="mx-auto max-w-5xl">
         <header className="mb-7 flex items-center justify-between">
           <div>
@@ -348,6 +349,6 @@ export default function Settings() {
           </section>
         )}
       </div>
-    </main>
+    <StaffNav active="config"/></main>
   );
 }

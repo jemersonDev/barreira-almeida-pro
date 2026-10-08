@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import StaffNav from "../components/StaffNav";
 
 type Service = { barberId: string; id: string; name: string; price: number; duration: number };
 type Busy = { start: string; end: string; kind: string };
@@ -112,7 +113,7 @@ export default function Manual() {
       </main>
     );
   return (
-    <main className="min-h-screen bg-[#080909] p-4 text-white grid place-items-center">
+    <main className="min-h-screen bg-[#080909] p-4 pb-32 text-white grid place-items-center">
       <section className="w-full max-w-xl rounded-xl border border-[#333] bg-[#151716] p-6">
         <a href="/operacao" className="text-xl font-black">
           <span className="text-[#d6ae42]">B.</span> ALMEIDA
@@ -230,6 +231,6 @@ export default function Manual() {
           </div>
         )}
       </section>
-    </main>
+    <StaffNav active="novo"/></main>
   );
 }
